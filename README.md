@@ -49,7 +49,7 @@ cargo run
 
 Your API will start on http://localhost:8000.
 
-🛠️ Usage
+## 🛠️ Usage
 Health Check Endpoint
 
 Check if the API is running smoothly:
@@ -63,12 +63,13 @@ Create a Todo
 
 json
 
+```bash
 {
   "title": "Learn Rust",
   "content": "Study Rust programming language.",
   "completed": false
 }
-
+```
 Get Todos
 
     GET /api/todos?page=1&limit=10
@@ -83,28 +84,30 @@ Edit a Todo
 
 json
 
+```bash
 {
   "title": "Learn Rust (Updated)",
   "completed": true
 }
-
+```
 Delete a Todo
 
     DELETE /api/todos/{id}
 
-📖 Documentation
+## 📖 Documentation
 
 For detailed information on how to use the API, refer to the API Documentation.
-🧑‍💻 Contributing
+## 🧑‍💻 Contributing
 
 Contributions are welcome! If you'd like to contribute, please fork the repo and submit a pull request.
-🙏 Acknowledgments
+
+## 🙏 Acknowledgments
 
     Rust Programming Language
     Warp
     MongoDB
     Tokio
 
-📝 License
+## 📝 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
