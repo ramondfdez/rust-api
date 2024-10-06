@@ -1,0 +1,13 @@
+services:
+  api:
+    build: .
+    restart: always
+    depends_on:
+      - mongodb
+    ports:
+      - "8000:8000"
+  mongodb:
+    image: "mongo:latest"
+    restart: always
+    ports:
+      - "27017:27017"
