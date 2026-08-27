@@ -1,0 +1,223 @@
+openapi: 3.0.3
+info:
+  title: Rust Todo API
+  description: A lightweight RESTful Todo API built with Rust, Warp, and MongoDB.
+  version: 1.0.0
+  license:
+    name: Apache-2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+
+tags:
+  - name: Todos
+    description: Operations related to Todo items
+  - name: Health
+    description: Service health check
+
+paths:
+  /api/todos:
+    get:
+      tags: [Todos]
+      summary: List todos
+      operationId: listTodos
+      parameters:
+        - name: page
+          in: query
+          description: Page number (1-indexed)
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          description: Number of items per page
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: A list of todos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TodoListResponse"
+    post:
+      tags: [Todos]
+      summary: Create a new todo
+      operationId: createTodo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TodoInput"
+      responses:
+        "201":
+          description: Todo created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SingleTodoResponse"
+        "409":
+          description: A todo with this title already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericResponse"
+
+  /api/todos/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: MongoDB ObjectID of the todo
+        schema:
+          type: string
+          example: "660d2c1f9a1e4a1a2c8b4567"
+    get:
+      tags: [Todos]
+      summary: Get a todo by ID
+      operationId: getTodo
+      responses:
+        "200":
+          description: The requested todo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SingleTodoResponse"
+        "404":
+          description: Todo not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericResponse"
+    patch:
+      tags: [Todos]
+      summary: Update an existing todo
+      operationId: updateTodo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTodoInput"
+      responses:
+        "200":
+          description: Todo updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SingleTodoResponse"
+        "404":
+          description: Todo not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericResponse"
+    delete:
+      tags: [Todos]
+      summary: Delete a todo by ID
+      operationId: deleteTodo
+      responses:
+        "204":
+          description: Todo deleted successfully
+        "404":
+          description: Todo not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericResponse"
+
+  /api/healthchecker:
+    get:
+      tags: [Health]
+      summary: Check API health
+      operationId: healthCheck
+      responses:
+        "200":
+          description: API is up and running
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericResponse"
+
+components:
+  schemas:
+    Todo:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "660d2c1f9a1e4a1a2c8b4567"
+        title:
+          type: string
+          example: Buy groceries
+        content:
+          type: string
+          example: Milk, eggs, bread, and coffee
+        completed:
+          type: boolean
+          example: false
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    TodoInput:
+      type: object
+      required: [title, content]
+      properties:
+        title:
+          type: string
+          example: Buy groceries
+        content:
+          type: string
+          example: Milk, eggs, bread, and coffee
+    UpdateTodoInput:
+      type: object
+      properties:
+        title:
+          type: string
+          example: Buy groceries (Updated)
+        content:
+          type: string
+          example: Milk, eggs, bread, coffee, and butter
+        completed:
+          type: boolean
+          example: true
+    GenericResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: API is running
+    SingleTodoResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        data:
+          type: object
+          properties:
+            todo:
+              $ref: "#/components/schemas/Todo"
+    TodoListResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        results:
+          type: integer
+          example: 1
+        todos:
+          type: array
+          items:
+            $ref: "#/components/schemas/Todo"
+

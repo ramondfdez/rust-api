@@ -4,7 +4,7 @@ mod response;
 
 use model::{QueryOptions};
 use warp::{http::Method, Filter, Rejection};
-use mongodb::{options::ClientOptions, Client, Database};
+use mongodb::{bson::doc, options::ClientOptions, Client, Database};
 use std::sync::Arc;
 
 type WebResult<T> = std::result::Result<T, Rejection>;
@@ -17,6 +17,8 @@ async fn main() {
         std::env::set_var("RUST_LOG", "api=info");
     }
     pretty_env_logger::init();
+
+    let port: u16 = get_env("PORT", "8000").parse().expect("PORT must be a valid number");
 
     // Connect to MongoDB
     let db = init_db().await.expect("Failed to initialize MongoDB");
@@ -66,23 +68,29 @@ async fn main() {
         .or(todo_routes_id)
         .or(health_checker);
 
-    println!("🚀 Server started successfully");
-    warp::serve(routes).run(([0, 0, 0, 0], 8000)).await;
+    println!("🚀 Server started successfully on port {}", port);
+    warp::serve(routes).run(([0, 0, 0, 0], port)).await;
 }
 
 // Function to connect to MongoDB
 async fn init_db() -> Result<MongoDB, mongodb::error::Error> {
-    // Define your MongoDB connection string (local or remote)
-    let client_uri = "mongodb://mongodb:27017"; // You can modify this if needed
+    let mongo_uri = get_env("MONGO_URI", "mongodb://mongodb:27017");
+    let db_name = get_env("MONGO_DB", "todo_db");
 
     // Create a client and establish a connection to the database
-    let mut client_options = ClientOptions::parse(client_uri).await?;
+    let mut client_options = ClientOptions::parse(&mongo_uri).await?;
     client_options.app_name = Some("TodoApp".to_string());
 
     let client = Client::with_options(client_options)?;
-    let db = client.database("todo_db");
+    client.database(&db_name).run_command(doc! {"ping": 1}, None).await?;
+    println!("Connected to MongoDB!");
 
-    Ok(Arc::new(db))
+    Ok(Arc::new(client.database(&db_name)))
+}
+
+// Reads an environment variable or falls back to a default value
+fn get_env(key: &str, fallback: &str) -> String {
+    std::env::var(key).unwrap_or_else(|_| fallback.to_string())
 }
 
 // Filter for passing the DB handle to handlers
